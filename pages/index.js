@@ -1,65 +1,131 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import Head from 'next/head';
+import { useState } from 'react';
+import { formatDate, getTimeString } from '../utils';
 
 export default function Home() {
+  const [weatherData, setWeatherData] = useState(null);
+  const [units, setUnits] = useState('imperial');
+  const [geo, setGeo] = useState({ lat: null, lon: null });
+  const [inputValue, setInputValue] = useState('');
+
+  const getWeather = async (e) => {
+    const response = await fetch(
+      `/api/weather?lat=${geo.lat}&lon=${geo.lon}&units=${units}`,
+      {
+        method: 'GET',
+      }
+    );
+    const result = await response.json();
+    setWeatherData(result);
+  };
+
+  const getGeoLocation = () => {
+    if (!navigator.geolocation) {
+    } else {
+      navigator.geolocation.getCurrentPosition(
+        (p) => {
+          const { latitude, longitude } = p.coords;
+          setGeo({ lat: latitude, lon: longitude });
+          setInputValue(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+        },
+        (e) => {
+          console.log(e);
+        }
+      );
+    }
+  };
+
   return (
-    <div className={styles.container}>
+    <div>
       <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
+        <title>Better Weather</title>
       </Head>
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+      <section className='hero is-small is-primary is-bold'>
+        <div className='hero-body'>
+          <div className='section'>
+            <div className='container'>
+              <h1 className='title'>Weather Getter</h1>
+              <h2 className='subtitle'>The better weather app</h2>
+            </div>
+          </div>
+          <div className='section'>
+            <div className='container'>
+              <div className='columns is-mobile'>
+                <div className='column'>
+                  <div className='field is-grouped'>
+                    <p className='control'>
+                      <span className='select'>
+                        <select
+                          value={units}
+                          onChange={(e) => {
+                            setUnits(e.target.value);
+                          }}
+                        >
+                          <option value='imperial'>°F</option>
+                          <option value='metric'>°C</option>
+                        </select>
+                      </span>
+                    </p>
+                    <p className='control is-expanded'>
+                      <input
+                        className='input'
+                        type='text'
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                      />
+                    </p>
+                    <p className='control'>
+                      <a
+                        className='button is-info is-inverted'
+                        onClick={getGeoLocation}
+                      >
+                        Locate
+                      </a>
+                    </p>
+                    <p className='control'>
+                      <a
+                        className='button is-primary is-inverted'
+                        onClick={getWeather}
+                      >
+                        Search
+                      </a>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
+      </section>
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
+      {weatherData !== null && (
+        <main className='section'>
+          <div className='container'>
+            <div className='box'>
+              <p className='title'>{`Current - ${formatDate(
+                weatherData.current.dt
+              )}`}</p>
+              <p className='subtitle'>{`${weatherData.current.weather[0].main} (${weatherData.current.weather[0].description})`}</p>
+              <p className='subtitle is-6'>Temp: {weatherData.current.temp}</p>
+              <p className='subtitle is-6'>
+                Feels Like: {weatherData.current.feels_like}
+              </p>
+              <p className='subtitle is-6'>
+                Wind Speed: {weatherData.current.wind_speed}
+              </p>
+              <p className='subtitle is-6'>
+                Humidity: {weatherData.current.humidity}
+              </p>
+              <p className='subtitle is-6'>
+                {`Sunrise: ${getTimeString(
+                  weatherData.current.sunrise
+                )} - Sunset: ${getTimeString(weatherData.current.sunset)}`}
+              </p>
+            </div>
+          </div>
+        </main>
+      )}
     </div>
-  )
+  );
 }
