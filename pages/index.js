@@ -28,7 +28,7 @@ export default function Home() {
         (p) => {
           const { latitude, longitude } = p.coords;
           setGeo({ lat: latitude, lon: longitude });
-          setInputValue(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+          setInputValue(`${latitude.toFixed(2)}, ${longitude.toFixed(2)}`);
         },
         (e) => {
           console.log(e);
@@ -38,7 +38,6 @@ export default function Home() {
   };
 
   useEffect(() => {
-    console.log('executed');
     getGeoLocation();
   }, []);
 
