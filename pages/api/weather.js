@@ -7,6 +7,17 @@ export default async (req, res) => {
     `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely&appid=${OPEN_WEATHER_KEY}&units=${units}`
   );
   const result = await response.json();
+
+  const customResponse = {
+    current: {
+      ...result.current,
+      weather_desc: `${result.current.weather[0].main} - ${result.current.weather[0].description}`,
+    },
+    today: result.daily[0],
+    daily: result.daily,
+    hourly: result.hourly,
+  };
+
   res.statusCode = response.status;
-  res.json(result);
+  res.json(customResponse);
 };
